@@ -140,7 +140,7 @@ namespace HelpDeskSystem.Areas.Identity.Pages.Account
             {
                 var user = CreateUser();
                 user.FirstName = Input.FirstName;
-                user.LastName = Input.MiddleName;
+                user.MiddleName = Input.MiddleName;
                 user.LastName = Input.LastName;
                 user.City = Input.City;
                 user.Country=Input.Country;
