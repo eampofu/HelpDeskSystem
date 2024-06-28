@@ -7,8 +7,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HelpDeskSystem.Data;
 using HelpDeskSystem.Models;
+using System.Security.Claims;
 
-namespace HelpDeskSystem.Views
+namespace HelpDeskSystem.Controllers
 {
     public class TicketsController : Controller
     {
@@ -22,13 +23,13 @@ namespace HelpDeskSystem.Views
         // GET: Tickets
         public async Task<IActionResult> Index()
         {
-            var tickets =await  _context.Tickets.Include(t => t.CreatedBy)
-                .OrderBy(o=>o.CreatedOn)
+            var tickets = await _context.Tickets.Include(t => t.CreatedBy)
+                .OrderBy(o => o.CreatedOn)
                 .ToListAsync();
-            return View( tickets);
+            return View(tickets);
         }
 
-        
+
         // GET: Tickets/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -60,13 +61,16 @@ namespace HelpDeskSystem.Views
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(  Ticket ticket)
+        public async Task<IActionResult> Create(Ticket ticket)
         {
             //if (ModelState.IsValid)
             //{
-                _context.Add(ticket);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ticket.CreatedOn = DateTime.Now;
+            ticket.CreatedById = userId;
+            _context.Add(ticket);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
             //}
             ViewData["CreatedById"] = new SelectList(_context.Users, "Id", "FullName", ticket.CreatedById);
             return View(ticket);

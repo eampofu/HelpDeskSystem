@@ -7,8 +7,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HelpDeskSystem.Data;
 using HelpDeskSystem.Models;
+using System.Security.Claims;
 
-namespace HelpDeskSystem.Views
+namespace HelpDeskSystem.Controllers
 {
     public class CommentsController : Controller
     {
@@ -65,14 +66,19 @@ namespace HelpDeskSystem.Views
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create( Comment comment)
+        public async Task<IActionResult> Create(Comment comment)
         {
             //if (ModelState.IsValid)
             //{
-                _context.Add(comment);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-           // }
+
+            //logged in User
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            comment.CreatedOn = DateTime.Now;
+            comment.CreatedById = userId;
+            _context.Add(comment);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+            // }
             ViewData["CreatedById"] = new SelectList(_context.Users, "Id", "FullName", comment.CreatedById);
             ViewData["TicketId"] = new SelectList(_context.Tickets, "Id", "Title", comment.TicketId);
             return View(comment);
