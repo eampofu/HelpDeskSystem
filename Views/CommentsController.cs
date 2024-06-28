@@ -10,26 +10,29 @@ using HelpDeskSystem.Models;
 
 namespace HelpDeskSystem.Views
 {
-    public class TicketsController : Controller
+    public class CommentsController : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        public TicketsController(ApplicationDbContext context)
+        public CommentsController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // GET: Tickets
+        // GET: Comments
         public async Task<IActionResult> Index()
         {
-            var tickets =await  _context.Tickets.Include(t => t.CreatedBy)
-                .OrderBy(o=>o.CreatedOn)
-                .ToListAsync();
-            return View( tickets);
+            var applicationDbContext = _context.Comments.Include(c => c.CreatedBy).Include(c => c.Ticket);
+            return View(await applicationDbContext.ToListAsync());
         }
-
-        
-        // GET: Tickets/Details/5
+        public async Task<IActionResult> TicketComments(int Id)
+        {
+            var comments = await _context.Comments.Where(x => x.TicketId == Id)
+                .Include(t => t.CreatedBy)
+                .Include(c => c.Ticket).ToListAsync();
+            return View(comments);
+        }
+        // GET: Comments/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -37,42 +40,45 @@ namespace HelpDeskSystem.Views
                 return NotFound();
             }
 
-            var ticket = await _context.Tickets
-                .Include(t => t.CreatedBy)
+            var comment = await _context.Comments
+                .Include(c => c.CreatedBy)
+                .Include(c => c.Ticket)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (ticket == null)
+            if (comment == null)
             {
                 return NotFound();
             }
 
-            return View(ticket);
+            return View(comment);
         }
 
-        // GET: Tickets/Create
+        // GET: Comments/Create
         public IActionResult Create()
         {
             ViewData["CreatedById"] = new SelectList(_context.Users, "Id", "FullName");
+            ViewData["TicketId"] = new SelectList(_context.Tickets, "Id", "Title");
             return View();
         }
 
-        // POST: Tickets/Create
+        // POST: Comments/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(  Ticket ticket)
+        public async Task<IActionResult> Create( Comment comment)
         {
             //if (ModelState.IsValid)
             //{
-                _context.Add(ticket);
+                _context.Add(comment);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
-            //}
-            ViewData["CreatedById"] = new SelectList(_context.Users, "Id", "FullName", ticket.CreatedById);
-            return View(ticket);
+           // }
+            ViewData["CreatedById"] = new SelectList(_context.Users, "Id", "FullName", comment.CreatedById);
+            ViewData["TicketId"] = new SelectList(_context.Tickets, "Id", "Title", comment.TicketId);
+            return View(comment);
         }
 
-        // GET: Tickets/Edit/5
+        // GET: Comments/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -80,23 +86,24 @@ namespace HelpDeskSystem.Views
                 return NotFound();
             }
 
-            var ticket = await _context.Tickets.FindAsync(id);
-            if (ticket == null)
+            var comment = await _context.Comments.FindAsync(id);
+            if (comment == null)
             {
                 return NotFound();
             }
-            ViewData["CreatedById"] = new SelectList(_context.Users, "Id", "FullName", ticket.CreatedById);
-            return View(ticket);
+            ViewData["CreatedById"] = new SelectList(_context.Users, "Id", "FullName", comment.CreatedById);
+            ViewData["TicketId"] = new SelectList(_context.Tickets, "Id", "Title", comment.TicketId);
+            return View(comment);
         }
 
-        // POST: Tickets/Edit/5
+        // POST: Comments/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Status,Priority,CreatedById,CreatedOn")] Ticket ticket)
+        public async Task<IActionResult> Edit(int id, Comment comment)
         {
-            if (id != ticket.Id)
+            if (id != comment.Id)
             {
                 return NotFound();
             }
@@ -105,12 +112,12 @@ namespace HelpDeskSystem.Views
             {
                 try
                 {
-                    _context.Update(ticket);
+                    _context.Update(comment);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TicketExists(ticket.Id))
+                    if (!CommentExists(comment.Id))
                     {
                         return NotFound();
                     }
@@ -121,11 +128,12 @@ namespace HelpDeskSystem.Views
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CreatedById"] = new SelectList(_context.Users, "Id", "FullName", ticket.CreatedById);
-            return View(ticket);
+            ViewData["CreatedById"] = new SelectList(_context.Users, "Id", "FullName", comment.CreatedById);
+            ViewData["TicketId"] = new SelectList(_context.Tickets, "Id", "Title", comment.TicketId);
+            return View(comment);
         }
 
-        // GET: Tickets/Delete/5
+        // GET: Comments/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -133,35 +141,36 @@ namespace HelpDeskSystem.Views
                 return NotFound();
             }
 
-            var ticket = await _context.Tickets
-                .Include(t => t.CreatedBy)
+            var comment = await _context.Comments
+                .Include(c => c.CreatedBy)
+                .Include(c => c.Ticket)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (ticket == null)
+            if (comment == null)
             {
                 return NotFound();
             }
 
-            return View(ticket);
+            return View(comment);
         }
 
-        // POST: Tickets/Delete/5
+        // POST: Comments/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var ticket = await _context.Tickets.FindAsync(id);
-            if (ticket != null)
+            var comment = await _context.Comments.FindAsync(id);
+            if (comment != null)
             {
-                _context.Tickets.Remove(ticket);
+                _context.Comments.Remove(comment);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool TicketExists(int id)
+        private bool CommentExists(int id)
         {
-            return _context.Tickets.Any(e => e.Id == id);
+            return _context.Comments.Any(e => e.Id == id);
         }
     }
 }

@@ -1,0 +1,49 @@
+﻿@model HelpDeskSystem.Models.Comment
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Comment</h4>
+    <hr />
+    <div class="row">
+        <table class="table">
+            <tr>
+                <th>
+
+                    @Html.DisplayNameFor(model => model.Description)
+                </th>
+                <td>
+                    @Html.DisplayFor(model => model.Description)
+                </td>
+                <th>
+                    @Html.DisplayNameFor(model => model.Ticket)
+                </th>
+                <td>
+                    @Html.DisplayFor(model => model.Ticket.Title)
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.CreatedOn)
+                </th>
+                <td>
+                    @Html.DisplayFor(model => model.CreatedOn)
+                </td>
+                <th>
+                    @Html.DisplayNameFor(model => model.CreatedBy)
+                </th>
+                <td>
+                    @Html.DisplayFor(model => model.CreatedBy.FullName)
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
