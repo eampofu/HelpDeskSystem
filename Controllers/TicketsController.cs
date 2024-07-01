@@ -70,8 +70,25 @@ namespace HelpDeskSystem.Controllers
             ticket.CreatedById = userId;
             _context.Add(ticket);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+           
             //}
+
+            //log Ticketactivity
+
+            var activity = new AuditTrail
+            {
+                Action = "Create",
+                TimeStamp = DateTime.Now,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserId = userId,
+                Module = "Tickets",
+                AffectedTable = "Tickets"
+
+            };
+            _context.Add(activity);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
             ViewData["CreatedById"] = new SelectList(_context.Users, "Id", "FullName", ticket.CreatedById);
             return View(ticket);
         }

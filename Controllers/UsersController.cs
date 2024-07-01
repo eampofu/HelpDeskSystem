@@ -63,6 +63,22 @@ namespace HelpDeskSystem.Controllers
 
                 var result = await _userManager.CreateAsync(registeredUser,user.PasswordHash);
                 if (result.Succeeded) {
+
+                    //Log the Audit Trail
+
+                    var activity = new AuditTrail
+                    {
+                        Action = "Create",
+                        TimeStamp = DateTime.Now,
+                        IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        UserId = userId,
+                        Module = "Users",
+                        AffectedTable = "USers"
+
+                    };
+                    _context.Add(activity);
+                    await _context.SaveChangesAsync();
+
                     return RedirectToAction(nameof(Index));
                         }
             }
